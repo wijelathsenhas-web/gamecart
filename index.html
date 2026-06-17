@@ -5,6 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Game Cart Store</title>
 
+<script>
+function addComment(){
+    let name = document.getElementById("name").value;
+    let comment = document.getElementById("comment").value;
+
+    if(name === "" || comment === ""){
+        alert("Please fill all fields!");
+        return;
+    }
+
+    let box = document.getElementById("comments");
+
+    let newComment = document.createElement("div");
+    newComment.style.background = "#1e293b";
+    newComment.style.padding = "10px";
+    newComment.style.margin = "10px";
+    newComment.style.borderRadius = "8px";
+
+    newComment.innerHTML =
+        "<b>" + name + "</b><br>" + comment;
+
+    box.prepend(newComment);
+
+    document.getElementById("name").value = "";
+    document.getElementById("comment").value = "";
+}
+</script>
+
 <style>
 body{
     margin:0;
@@ -194,6 +222,32 @@ footer{
 <img src="https://cdn.cloudflare.steamstatic.com/steam/apps/1238810/header.jpg">
 <div class="content">Battlefield V<div class="price">Rs. 300</div></div>
 </div>
+
+</div>
+</section>
+
+<!-- COMMENTS -->
+<section>
+<h2>💬 Customer Comments</h2>
+
+<div class="contact">
+
+<input type="text" id="name" placeholder="Your Name"
+style="width:80%; padding:10px; margin:10px; border-radius:8px; border:none;">
+
+<br>
+
+<textarea id="comment" placeholder="Write your comment..."
+style="width:80%; height:100px; padding:10px; border-radius:8px; border:none;">
+</textarea>
+
+<br>
+
+<button onclick="addComment()" class="btn">
+Post Comment
+</button>
+
+<div id="comments" style="margin-top:20px;"></div>
 
 </div>
 </section>
