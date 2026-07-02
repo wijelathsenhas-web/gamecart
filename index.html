@@ -5,29 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VELDEX</title>
 
-  <meta name="description" content="Modern online game store featuring popular PC games, affordable prices, and a fast, user-friendly experience.">
+    <meta name="description" content="Modern online game store featuring popular PC games, affordable prices, and a fast, user-friendly experience.">
     <meta name="keywords" content="veldex, PC Games, Online Game Store, Buy PC Games, Digital Games, Game Shop, PC Game Store, Video Games, Gaming Store, Affordable Games, Popular Games, Action Games, Adventure Games, Racing Games, Strategy Games, Multiplayer Games, Steam Games, Game Deals, Gaming Marketplace, Best PC Games">
-    <meta property="og:title" content="Veldex Buy PC Games
+    <meta property="og:title" content="Veldex Buy PC Games">
     <meta property="og:description" content="veldex Makes Gaming Affordable">
     <meta property="og:url" content="https://wijelathsenhas-web.github.io/veldex/">
-   <meta property="og:image" content="logo.png">
+    <meta property="og:image" content="logo.png">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Veldex">
     <meta name="twitter:description" content="Veldex Makes Gaming Affordable">
-   <meta name="twitter:image" content="logo.png">
+    <meta name="twitter:image" content="logo.png">
     <meta name="twitter:url" content="https://wijelathsenhas-web.github.io/veldex/">
     <meta name="google-site-verification" content="_baaFMM7M08TppLA75yg3BAMJ-oMAced12cVEpB4V_Q" />
     <link rel="canonical" href="https://wijelathsenhas-web.github.io/veldex/">
-     <link rel="icon" href="logo.png" sizes="any">
+    <link rel="icon" href="logo.png" sizes="any">
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png"> 
     <link rel="shortcut icon" href="/logo.png"/>
-
-
-
-
-<link rel="icon" href="logo.png" type="image/png">
 
 <style>
 body{
@@ -103,11 +98,12 @@ h2{
     margin-top:6px;
 }
 
-.contact{
+.contact, .auth-section{
     text-align:center;
     background:#111827;
     padding:40px;
     border-radius:10px;
+    margin-bottom: 20px;
 }
 
 .btn{
@@ -123,13 +119,25 @@ h2{
     font-size: 16px;
 }
 
+.btn-primary { background: #3b82f6; }
+.btn-danger { background: #ef4444; }
+
+.input-field {
+    width: 80%;
+    max-width: 300px;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+    color: black;
+}
+
 footer{
     text-align:center;
     padding:20px;
     background:#020617;
 }
 
-/* Added small fix for the comments layout */
 .comment-box {
     background: #1e293b;
     padding: 15px;
@@ -151,6 +159,25 @@ footer{
     </h1>
     <p>Best PC games Collection</p>
 </header>
+
+<section>
+    <div class="auth-section">
+        <h2>🔐 User Account</h2>
+        
+        <div id="loggedOutView">
+            <p>Sign up or login to buy games and comment!</p>
+            <input type="email" id="authEmail" class="input-field" placeholder="Email Address"><br>
+            <input type="password" id="authPassword" class="input-field" placeholder="Password"><br>
+            <button id="loginBtn" class="btn btn-primary">Login</button>
+            <button id="signupBtn" class="btn">Sign Up</button>
+        </div>
+
+        <div id="loggedInView" style="display: none;">
+            <p>Welcome back, <b id="userDisplayEmail" style="color:#22c55e;"></b>!</p>
+            <button id="logoutBtn" class="btn btn-danger">Logout</button>
+        </div>
+    </div>
+</section>
 
 <section>
 <h2>🔥 Far Cry Series</h2>
@@ -230,13 +257,11 @@ footer{
 
 <section>
 <h2>💬 Customer Comments</h2>
-
 <div class="contact">
     <input type="text" id="name" placeholder="Your Name" style="width:80%; padding:10px; margin:10px; border-radius:8px; border:none; color:black;">
     <br>
     <textarea id="comment" placeholder="Write your comment..." style="width:80%; height:100px; padding:10px; border-radius:8px; border:none; color:black; font-family:Arial;"></textarea>
     <br>
-    
     <button id="postBtn" class="btn">Post Comment</button>
 
     <div id="comments" style="margin-top:20px;">
@@ -261,6 +286,9 @@ footer{
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } 
     from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    // ADDED: Import Firebase Authentication
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } 
+    from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     // Your Firebase Configuration
     const firebaseConfig = {
@@ -273,10 +301,80 @@ footer{
         measurementId: "G-KQLCCJSCG0"
     };
 
-    // Initialize Firebase and Firestore
+    // Initialize Firebase, Firestore, and Auth
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
     const commentsCollection = collection(db, "comments");
+
+    // --- AUTHENTICATION LOGIC ---
+
+    const loggedOutView = document.getElementById('loggedOutView');
+    const loggedInView = document.getElementById('loggedInView');
+    const userDisplayEmail = document.getElementById('userDisplayEmail');
+    const emailInput = document.getElementById('authEmail');
+    const passwordInput = document.getElementById('authPassword');
+
+    // Monitor Auth State (User Login/Logout wena eka track karanna)
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loggedOutView.style.display = 'none';
+            loggedInView.style.display = 'block';
+            userDisplayEmail.innerText = user.email;
+        } else {
+            loggedOutView.style.display = 'block';
+            loggedInView.style.display = 'none';
+        }
+    });
+
+    // Sign Up Function
+    document.getElementById("signupBtn").addEventListener("click", () => {
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        if(email === "" || password === "") {
+            alert("Email ekayi password ekayi enter karanna.");
+            return;
+        }
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                alert("Account created successfully!");
+                emailInput.value = "";
+                passwordInput.value = "";
+            })
+            .catch((error) => {
+                alert("Error: " + error.message);
+            });
+    });
+
+    // Login Function
+    document.getElementById("loginBtn").addEventListener("click", () => {
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        if(email === "" || password === "") {
+            alert("Email ekayi password ekayi enter karanna.");
+            return;
+        }
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                alert("Logged in successfully!");
+                emailInput.value = "";
+                passwordInput.value = "";
+            })
+            .catch((error) => {
+                alert("Login Error: Incorrect email or password.");
+            });
+    });
+
+    // Logout Function
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+        signOut(auth).then(() => {
+            alert("Logged out successfully!");
+        }).catch((error) => {
+            console.error("Logout Error", error);
+        });
+    });
+
+    // --- FIRESTORE COMMENTS LOGIC ---
 
     // 1. READ COMMENTS REAL-TIME (Penda thiyenna)
     const q = query(commentsCollection, orderBy("timestamp", "desc"));
